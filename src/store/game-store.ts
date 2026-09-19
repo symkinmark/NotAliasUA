@@ -1,6 +1,5 @@
 import { makeAutoObservable } from "mobx";
 import { makeLoggable } from "mobx-log";
-import { assert } from "ts-essentials";
 import { getRandomWord, resetUsedWords } from "../lib/get-random-word";
 import { makePersistable } from "mobx-persist-store";
 import { i18nStore } from "./i18n-store";
@@ -16,6 +15,8 @@ class GameStore {
   secondsPerRound = 60;
   secondsLeft?: number;
   isWaitingLastWord = false;
+  /** Wall-clock end of the round, so the timer survives the tab being backgrounded. */
+  private deadline?: number;
   /** Score the team that just played earned, kept for the finish screen. */
   lastRoundScore = 0;
   private intervalId?: NodeJS.Timeout;
@@ -68,16 +69,29 @@ class GameStore {
     haptic("light");
     this.isWaitingLastWord = false;
     this.secondsLeft = this.secondsPerRound;
+    this.deadline = Date.now() + this.secondsPerRound * 1000;
     this.clearTimer();
-    this.intervalId = setInterval(this.handleTimerTick, 1000);
+    // 250ms keeps the display honest without relying on interval accuracy.
+    this.intervalId = setInterval(this.handleTimerTick, 250);
     routerStore.navigate("game");
   }
 
   private handleTimerTick() {
-    assert(this.secondsLeft);
-    this.secondsLeft--;
-    if (this.secondsLeft === 0) {
+    if (this.deadline === undefined) {
       this.clearTimer();
+      return;
+    }
+    // Derived from the clock, not decremented — a throttled or coalesced
+    // interval can no longer run past zero or drift.
+    const remaining = Math.max(
+      0,
+      Math.ceil((this.deadline - Date.now()) / 1000)
+    );
+    if (remaining === this.secondsLeft) return;
+    this.secondsLeft = remaining;
+    if (remaining === 0) {
+      this.clearTimer();
+      this.deadline = undefined;
       this.isWaitingLastWord = true;
       haptic("heavy");
     }
@@ -85,6 +99,7 @@ class GameStore {
 
   private finishRound() {
     this.clearTimer();
+    this.deadline = undefined;
     const penalty = teamsStore.penaltyForSkip ? this.skipped.length : 0;
     this.lastRoundScore = this.guessed.length - penalty;
     teamsStore.addScore(this.lastRoundScore);
@@ -136,6 +151,7 @@ class GameStore {
 
   private resetRound() {
     this.clearTimer();
+    this.deadline = undefined;
     this.isWaitingLastWord = false;
     this.secondsLeft = undefined;
     this.skipped = [];
