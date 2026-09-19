@@ -1,0 +1,11 @@
+{
+  "name": "Аліас — українські слова",
+  "short_name": "Аліас",
+  "description": "Гра Аліас з великим словником українських слів",
+  "lang": "uk",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fdecc7",
+  "theme_color": "#fdecc7",
+  "orientation": "portrait"
+}
