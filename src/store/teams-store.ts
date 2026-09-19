@@ -11,8 +11,11 @@ export const MAX_TEAMS = 4;
 /** 0 means "no target — play until you stop". */
 export const TARGET_OPTIONS = [20, 30, 50, 0];
 
-function makeTeam(index: number): Team {
-  return { id: `team-${index}-${Date.now()}`, name: "", score: 0 };
+let idCounter = 0;
+
+function makeTeam(): Team {
+  idCounter += 1;
+  return { id: `team-${Date.now()}-${idCounter}`, name: "", score: 0 };
 }
 
 /** Empty name falls back to a localized default, so it follows the UI language. */
@@ -21,7 +24,7 @@ export function teamLabel(team: Team, index: number): string {
 }
 
 class TeamsStore {
-  teams: Team[] = [makeTeam(0), makeTeam(1)];
+  teams: Team[] = [makeTeam(), makeTeam()];
   currentIndex = 0;
   targetScore = 30;
   penaltyForSkip = false;
@@ -71,7 +74,7 @@ class TeamsStore {
   addTeam() {
     if (this.teams.length >= MAX_TEAMS) return;
     haptic("light");
-    this.teams.push(makeTeam(this.teams.length));
+    this.teams.push(makeTeam());
   }
 
   removeTeam(id: string) {
@@ -93,6 +96,14 @@ class TeamsStore {
     haptic("light");
     this.teams.forEach((team) => (team.score = 0));
     this.currentIndex = 0;
+  }
+
+  /** Factory reset: teams, names, scores and round settings. Language is kept. */
+  resetAll() {
+    this.teams = [makeTeam(), makeTeam()];
+    this.currentIndex = 0;
+    this.targetScore = 30;
+    this.penaltyForSkip = false;
   }
 
   changeTargetScore(score: number) {

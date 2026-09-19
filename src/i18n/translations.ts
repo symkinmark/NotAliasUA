@@ -35,6 +35,9 @@ const translations = {
     playTo: "Грати до",
     skipPenalty: "Мінус бал за пропуск",
     done: "Готово",
+    resetAll: "Скинути все",
+    resetAllConfirm: "Натисніть ще раз",
+    resetAllHint: "Команди, назви, бали й налаштування раунду",
   },
   en: {
     appTitle: "Alias game",
@@ -63,6 +66,9 @@ const translations = {
     playTo: "Play to",
     skipPenalty: "−1 point per skip",
     done: "Done",
+    resetAll: "Reset all",
+    resetAllConfirm: "Tap again to confirm",
+    resetAllHint: "Teams, names, scores and round settings",
   },
   ru: {
     appTitle: "Алиас",
@@ -91,6 +97,9 @@ const translations = {
     playTo: "Играть до",
     skipPenalty: "Минус балл за пропуск",
     done: "Готово",
+    resetAll: "Скинути все",
+    resetAllConfirm: "Натисніть ще раз",
+    resetAllHint: "Команди, назви, бали й налаштування раунду",
   },
 } as const;
 

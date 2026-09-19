@@ -1,13 +1,35 @@
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, RotateCcw } from "lucide-react";
 import { Modal } from "../ui/modal";
 import { routerStore } from "../store/router-store";
 import { gameStore } from "../store/game-store";
+import { teamsStore } from "../store/teams-store";
 import { i18nStore, t } from "../store/i18n-store";
 import { languages, languageNames } from "../i18n/translations";
-import { teamsStore } from "../store/teams-store";
 
 export function SettingsScreen() {
+  const [isConfirming, setIsConfirming] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  // Two taps, so a stray finger can't wipe the team names mid-game.
+  function handleResetAll() {
+    if (!isConfirming) {
+      setIsConfirming(true);
+      timeoutRef.current = setTimeout(() => setIsConfirming(false), 4000);
+      return;
+    }
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setIsConfirming(false);
+    gameStore.resetEverything();
+  }
+
   return (
     <Modal
       footer={
@@ -82,6 +104,27 @@ export function SettingsScreen() {
                 />
               </motion.span>
             </button>
+          </div>
+
+          <div className="pt-5 border-t border-text/10">
+            <motion.button
+              onClick={handleResetAll}
+              whileTap={{ scale: 0.97 }}
+              animate={{
+                backgroundColor: isConfirming
+                  ? "var(--color-error)"
+                  : "rgba(229, 61, 0, 0.08)",
+                color: isConfirming ? "var(--color-white)" : "var(--color-error)",
+              }}
+              transition={{ duration: 0.15 }}
+              className="w-full h-12 rounded-lg font-semibold text-base flex items-center justify-center gap-2"
+            >
+              <RotateCcw size={17} />
+              {isConfirming ? t("resetAllConfirm") : t("resetAll")}
+            </motion.button>
+            <p className="mt-2 text-xs text-text/45 text-center">
+              {t("resetAllHint")}
+            </p>
           </div>
         </div>
       </div>

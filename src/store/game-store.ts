@@ -112,6 +112,16 @@ class GameStore {
     routerStore.navigate("start-modal");
   }
 
+  /** Wipes teams, scores and round settings, then returns to the start screen. */
+  resetEverything() {
+    haptic("heavy");
+    teamsStore.resetAll();
+    this.secondsPerRound = 60;
+    resetUsedWords();
+    this.resetRound();
+    routerStore.navigate("start-modal");
+  }
+
   changeSecondsPerRound(seconds: number) {
     haptic("selection");
     this.secondsPerRound = seconds;
