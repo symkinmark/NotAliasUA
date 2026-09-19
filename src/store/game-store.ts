@@ -114,9 +114,21 @@ class GameStore {
     routerStore.navigate("pass");
   }
 
+  /** Only for starting a fresh game after a win — this wipes every score. */
   newGame() {
     haptic("light");
     teamsStore.resetScores();
+    this.resetRound();
+    routerStore.navigate("start-modal");
+  }
+
+  /**
+   * Leave the results screen without losing anything. The round that just
+   * finished still counts, so the next turn belongs to the next team.
+   */
+  exitToStart() {
+    haptic("light");
+    teamsStore.next();
     this.resetRound();
     routerStore.navigate("start-modal");
   }

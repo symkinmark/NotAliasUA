@@ -39,6 +39,7 @@ const translations = {
     resetAllConfirm: "Натисніть ще раз",
     resetAllHint: "Команди, назви, бали й налаштування раунду",
     lastWord: "Час вийшов — останнє слово!",
+    menu: "До меню",
   },
   en: {
     appTitle: "Alias game",
@@ -71,6 +72,7 @@ const translations = {
     resetAllConfirm: "Tap again to confirm",
     resetAllHint: "Teams, names, scores and round settings",
     lastWord: "Time's up — last word!",
+    menu: "Menu",
   },
   ru: {
     appTitle: "Алиас",
@@ -103,6 +105,7 @@ const translations = {
     resetAllConfirm: "Натисніть ще раз",
     resetAllHint: "Команди, назви, бали й налаштування раунду",
     lastWord: "Час вийшов — останнє слово!",
+    menu: "До меню",
   },
 } as const;
 

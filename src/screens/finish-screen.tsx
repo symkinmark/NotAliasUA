@@ -88,12 +88,14 @@ export function FinishScreen() {
             </Button>
           )}
 
-          <button
-            onClick={() => gameStore.newGame()}
-            className="text-text/60 text-sm hover:text-text/80 transition-colors mt-1"
-          >
-            {t("quit")}
-          </button>
+          {!winner && (
+            <button
+              onClick={() => gameStore.exitToStart()}
+              className="text-text/60 text-sm hover:text-text/80 transition-colors mt-1"
+            >
+              {t("menu")}
+            </button>
+          )}
         </div>
       </div>
     </Modal>
