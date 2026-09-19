@@ -4,6 +4,8 @@ import { StartScreen } from "./screens/start-screen";
 import { GameScreen } from "./screens/game-screen";
 import { FinishScreen } from "./screens/finish-screen";
 import { SettingsScreen } from "./screens/settings-screen";
+import { PassScreen } from "./screens/pass-screen";
+import { TeamsScreen } from "./screens/teams-screen";
 import { routerStore } from "./store/router-store";
 
 const transition: Transition = { ease: "easeInOut", duration: 0.2 };
@@ -36,6 +38,8 @@ export function Page() {
         >
           {routerStore.screen === "start-modal" && <StartScreen />}
           {routerStore.screen === "settings" && <SettingsScreen />}
+          {routerStore.screen === "teams" && <TeamsScreen />}
+          {routerStore.screen === "pass" && <PassScreen />}
           {routerStore.screen === "finish" && <FinishScreen />}
           {routerStore.screen === "game" && <GameScreen />}
         </motion.div>

@@ -5,6 +5,7 @@ import { routerStore } from "../store/router-store";
 import { gameStore } from "../store/game-store";
 import { i18nStore, t } from "../store/i18n-store";
 import { languages, languageNames } from "../i18n/translations";
+import { teamsStore } from "../store/teams-store";
 
 export function SettingsScreen() {
   return (
@@ -57,6 +58,30 @@ export function SettingsScreen() {
                 </motion.button>
               ))}
             </div>
+          </div>
+
+          <div>
+            <button
+              onClick={() => teamsStore.togglePenaltyForSkip()}
+              className="w-full flex items-center justify-between gap-3 text-left"
+            >
+              <span className="text-base text-text/70">{t("skipPenalty")}</span>
+              <motion.span
+                className="relative shrink-0 w-12 h-7 rounded-full"
+                animate={{
+                  backgroundColor: teamsStore.penaltyForSkip
+                    ? "var(--color-success)"
+                    : "rgba(34, 34, 34, 0.12)",
+                }}
+                transition={{ duration: 0.15 }}
+              >
+                <motion.span
+                  className="absolute top-1 left-1 w-5 h-5 rounded-full bg-white shadow"
+                  animate={{ x: teamsStore.penaltyForSkip ? 20 : 0 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                />
+              </motion.span>
+            </button>
           </div>
         </div>
       </div>

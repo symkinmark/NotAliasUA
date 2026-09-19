@@ -2,7 +2,13 @@ import { makeAutoObservable } from "mobx";
 import { makeLoggable } from "mobx-log";
 import { haptic } from "../lib/haptics";
 
-type Screen = "start-modal" | "game" | "finish" | "settings";
+type Screen =
+  | "start-modal"
+  | "teams"
+  | "pass"
+  | "game"
+  | "finish"
+  | "settings";
 
 class RouterStore {
   screen: Screen = "start-modal";
@@ -24,6 +30,11 @@ class RouterStore {
   closeSettings() {
     haptic("light");
     this.screen = "start-modal";
+  }
+
+  openTeams() {
+    haptic("light");
+    this.screen = "teams";
   }
 }
 
