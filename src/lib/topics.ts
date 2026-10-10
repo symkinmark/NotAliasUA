@@ -3,6 +3,8 @@ import type { Language } from "../i18n/translations";
 export const topicIds = [
   "nature", "food", "home", "city", "body", "people", "work", "sport",
   "culture", "science", "law", "military", "news", "ukraine", "abstract",
+  // New ids are only ever appended: saved topic selections reference these strings.
+  "milftech", "realpolitik",
 ] as const;
 
 export type TopicId = typeof topicIds[number];
@@ -11,6 +13,7 @@ export const topicEmoji: Record<TopicId, string> = {
   nature: "🐾", food: "🍎", home: "🏠", city: "🚌", body: "🧍",
   people: "🧑", work: "💼", sport: "⚽", culture: "🎭", science: "🔬",
   law: "⚖️", military: "🪖", news: "📰", ukraine: "🇺🇦", abstract: "💭",
+  milftech: "🚀", realpolitik: "♟️",
 };
 
 const names: Record<Language, Record<TopicId, string>> = {
@@ -20,6 +23,7 @@ const names: Record<Language, Record<TopicId, string>> = {
     work: "Робота і гроші", sport: "Спорт та ігри", culture: "Культура",
     science: "Наука і техніка", law: "Право і злочини", military: "Військове",
     news: "Новини і політика", ukraine: "Україна і свята", abstract: "Абстрактне",
+    milftech: "MILFtech", realpolitik: "Реалполітик",
   },
   en: {
     nature: "Animals & nature", food: "Food & drink", home: "Home & things",
@@ -27,6 +31,7 @@ const names: Record<Language, Record<TopicId, string>> = {
     work: "Work & money", sport: "Sport & games", culture: "Culture",
     science: "Science & tech", law: "Law & crime", military: "Military",
     news: "News & politics", ukraine: "Ukraine & holidays", abstract: "Abstract",
+    milftech: "MILFtech", realpolitik: "Realpolitik",
   },
   ru: {
     nature: "Животные и природа", food: "Еда и напитки", home: "Дом и быт",
@@ -34,6 +39,7 @@ const names: Record<Language, Record<TopicId, string>> = {
     work: "Работа и деньги", sport: "Спорт и игры", culture: "Культура",
     science: "Наука и техника", law: "Право и преступления", military: "Военное",
     news: "Новости и политика", ukraine: "Украина и праздники", abstract: "Абстрактное",
+    milftech: "MILFtech", realpolitik: "Реалполитик",
   },
 };
 
