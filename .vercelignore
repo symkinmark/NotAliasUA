@@ -1,0 +1,7 @@
+# Local tooling, not part of the site or the API.
+.claude
+.agents
+.github
+docs
+.env*
+.vercel

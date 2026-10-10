@@ -9,7 +9,8 @@ type Screen =
   | "pass"
   | "game"
   | "finish"
-  | "settings";
+  | "settings"
+  | "room";
 
 class RouterStore {
   screen: Screen = "start-modal";
@@ -41,6 +42,11 @@ class RouterStore {
   openTopics() {
     haptic("light");
     this.screen = "topics";
+  }
+
+  openRoom() {
+    haptic("light");
+    this.screen = "room";
   }
 }
 

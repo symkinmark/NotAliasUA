@@ -7,6 +7,8 @@ import { SettingsScreen } from "./screens/settings-screen";
 import { PassScreen } from "./screens/pass-screen";
 import { TeamsScreen } from "./screens/teams-screen";
 import { TopicsScreen } from "./screens/topics-screen";
+import { RoomScreen } from "./screens/room-screen";
+import { RoomBadge } from "./ui/room-status";
 import { routerStore } from "./store/router-store";
 
 const transition: Transition = { ease: "easeInOut", duration: 0.2 };
@@ -28,6 +30,8 @@ export function Page() {
         </motion.button>
       )}
 
+      <RoomBadge />
+
       <AnimatePresence mode="wait">
         <motion.div
           key={routerStore.screen}
@@ -41,6 +45,7 @@ export function Page() {
           {routerStore.screen === "settings" && <SettingsScreen />}
           {routerStore.screen === "teams" && <TeamsScreen />}
           {routerStore.screen === "topics" && <TopicsScreen />}
+          {routerStore.screen === "room" && <RoomScreen />}
           {routerStore.screen === "pass" && <PassScreen />}
           {routerStore.screen === "finish" && <FinishScreen />}
           {routerStore.screen === "game" && <GameScreen />}

@@ -6,6 +6,7 @@ import { TeamTiles } from "../ui/team-tiles";
 import { gameStore } from "../store/game-store";
 import { teamsStore } from "../store/teams-store";
 import { t } from "../store/i18n-store";
+import { roomStore } from "../store/room-store";
 
 export function PassScreen() {
   return (
@@ -19,7 +20,9 @@ export function PassScreen() {
           <Smartphone size={40} />
         </motion.div>
 
-        <span className="mt-4 text-lg text-text/60">{t("passThePhone")}</span>
+        <span className="mt-4 text-lg text-text/60">
+          {roomStore.active ? t("explainerTapsReady") : t("passThePhone")}
+        </span>
         <span className="mt-1 text-sm text-text/40">{t("yourTurn")}</span>
         <span className="mt-2 text-3xl font-bold break-words max-w-full">
           {teamsStore.currentLabel}

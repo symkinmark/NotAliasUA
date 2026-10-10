@@ -5,6 +5,8 @@ import { Countdown } from "../ui/countdown";
 import { CardDeck } from "../ui/card-deck";
 import { gameStore } from "../store/game-store";
 import { t } from "../store/i18n-store";
+import { roomStore } from "../store/room-store";
+import { cn } from "../lib/cn";
 
 export function GameScreen() {
   return (
@@ -32,13 +34,16 @@ export function GameScreen() {
       <div className="flex items-center justify-center gap-8 mt-8 w-[290px]">
         <Counter variant="error" value={gameStore.skipped.length} />
 
-        {/* Takes back a mis-tap and puts the word back on top of the deck. */}
+        {/* Takes back a mis-tap and puts the word back on top of the deck. Explainer only. */}
         <motion.button
           onClick={() => gameStore.undo()}
           disabled={!gameStore.canUndo}
           whileTap={{ scale: 0.9 }}
           aria-label={t("undo")}
-          className="flex flex-col items-center gap-0.5 text-text/45 enabled:hover:text-text transition-colors disabled:opacity-25 py-1 px-2"
+          className={cn(
+            "flex flex-col items-center gap-0.5 text-text/45 enabled:hover:text-text transition-colors disabled:opacity-25 py-1 px-2",
+            !roomStore.canAnswer && "invisible"
+          )}
         >
           <Undo2 size={20} />
           <span className="text-[10px] font-medium leading-none">{t("undo")}</span>

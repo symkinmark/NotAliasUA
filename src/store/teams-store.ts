@@ -4,7 +4,7 @@ import { makePersistable } from "mobx-persist-store";
 import { haptic } from "../lib/haptics";
 import { t } from "./i18n-store";
 
-export type Team = { id: string; name: string; score: number };
+type Team = { id: string; name: string; score: number };
 
 export const MIN_TEAMS = 2;
 export const MAX_TEAMS = 6;
@@ -120,6 +120,23 @@ class TeamsStore {
   togglePenaltyForSkip() {
     haptic("selection");
     this.penaltyForSkip = !this.penaltyForSkip;
+  }
+
+  /** What other phones in a room need to mirror the teams. */
+  get shared() {
+    return {
+      teams: this.teams,
+      currentIndex: this.currentIndex,
+      targetScore: this.targetScore,
+      penaltyForSkip: this.penaltyForSkip,
+    };
+  }
+
+  applyShared(state: TeamsStore["shared"]) {
+    this.teams = state.teams;
+    this.currentIndex = state.currentIndex;
+    this.targetScore = state.targetScore;
+    this.penaltyForSkip = state.penaltyForSkip;
   }
 }
 

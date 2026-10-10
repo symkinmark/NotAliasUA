@@ -1,4 +1,4 @@
-import { Users, Tags, Shuffle } from "lucide-react";
+import { Users, Tags, Shuffle, Smartphone } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "../ui/button";
 import { Modal } from "../ui/modal";
@@ -7,6 +7,8 @@ import { gameStore, type GameMode } from "../store/game-store";
 import { routerStore } from "../store/router-store";
 import { teamsStore, TARGET_OPTIONS } from "../store/teams-store";
 import { i18nStore, t } from "../store/i18n-store";
+import { roomStore } from "../store/room-store";
+import { RoomDot } from "../ui/room-status";
 import { isTagged } from "../lib/word-pool";
 import { topicIds } from "../lib/topics";
 
@@ -138,6 +140,24 @@ export function StartScreen() {
             <span className="truncate">{t("shuffle")}</span>
           </motion.button>
         </div>
+
+        <motion.button
+          onClick={() => routerStore.openRoom()}
+          whileTap={{ scale: 0.97 }}
+          className="mt-2 w-full h-12 rounded-lg bg-text/5 hover:bg-text/10 transition-colors flex items-center justify-center gap-2 text-sm font-medium min-w-0"
+        >
+          <Smartphone size={16} className="shrink-0" />
+          {roomStore.active ? (
+            <>
+              <span className="tabular-nums">
+                {t("room")} {roomStore.code}
+              </span>
+              <RoomDot />
+            </>
+          ) : (
+            <span className="truncate">{t("multiPhone")}</span>
+          )}
+        </motion.button>
 
         <div className="mt-6 w-full">
           <Button variant="success" onClick={() => gameStore.goToPass()}>

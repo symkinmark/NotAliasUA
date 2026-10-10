@@ -8,6 +8,8 @@ import { teamsStore } from "./teams-store";
 import type { Language } from "../i18n/translations";
 import { haptic } from "../lib/haptics";
 import { routerStore } from "./router-store";
+import { serverNow } from "../lib/clock";
+import { deviceId } from "../lib/device-id";
 
 export type GameMode = "classic" | "levels";
 
@@ -26,8 +28,13 @@ class GameStore {
   mode: GameMode = "classic";
   /** Empty means every topic. */
   selectedTopics: TopicId[] = [];
-  /** Wall-clock end of the round, so the timer survives a backgrounded tab. */
-  private deadline?: number;
+  /**
+   * Server-clock end of the round, so the timer survives a backgrounded tab
+   * and every phone in a room counts down to the same moment.
+   */
+  deadline?: number;
+  /** The device that tapped "Ready" — in a room, only it gets the answer buttons. */
+  explainer: string | null = null;
   private intervalId?: NodeJS.Timeout;
 
   constructor() {
@@ -113,14 +120,11 @@ class GameStore {
     const last = this.history.pop();
     if (!last) return;
     haptic("medium");
-    if (last.kind === "correct") {
-      this.guessed.splice(this.guessed.lastIndexOf(last.word), 1);
-    } else {
-      this.skipped.splice(this.skipped.lastIndexOf(last.word), 1);
-    }
+    const list = last.kind === "correct" ? this.guessed : this.skipped;
+    const index = list.map((word) => word.text).lastIndexOf(last.word.text);
+    if (index >= 0) list.splice(index, 1);
     // Return the card we drew to replace it, then restore the original.
-    const replacement = this.cards.shift();
-    if (replacement) wordPool.giveBack(replacement);
+    if (this.cards.shift()) wordPool.giveBack();
     this.cards.push(last.word);
   }
 
@@ -128,7 +132,7 @@ class GameStore {
 
   /** On the results screen a word can be flipped between correct and skipped. */
   markSkipped(word: Word) {
-    const index = this.guessed.indexOf(word);
+    const index = this.guessed.findIndex((item) => item.text === word.text);
     if (index < 0) return;
     haptic("selection");
     this.guessed.splice(index, 1);
@@ -137,7 +141,7 @@ class GameStore {
   }
 
   markCorrect(word: Word) {
-    const index = this.skipped.indexOf(word);
+    const index = this.skipped.findIndex((item) => item.text === word.text);
     if (index < 0) return;
     haptic("selection");
     this.skipped.splice(index, 1);
@@ -161,12 +165,26 @@ class GameStore {
 
   beginPlay() {
     haptic("light");
-    this.isWaitingLastWord = false;
-    this.secondsLeft = this.secondsPerRound;
-    this.deadline = Date.now() + this.secondsPerRound * 1000;
-    this.clearTimer();
-    this.intervalId = setInterval(this.handleTimerTick, 250);
+    this.explainer = deviceId;
+    this.deadline = serverNow() + this.secondsPerRound * 1000;
+    this.resumeTimer();
     routerStore.navigate("game");
+  }
+
+  /** In a room: a spectator phone takes the buttons, e.g. when the explainer's phone died. */
+  takeOver() {
+    haptic("medium");
+    this.explainer = deviceId;
+  }
+
+  /** (Re)starts the local countdown from the shared deadline. */
+  private resumeTimer() {
+    this.clearTimer();
+    this.isWaitingLastWord = false;
+    this.secondsLeft = undefined;
+    if (this.deadline === undefined) return;
+    this.handleTimerTick();
+    if (!this.isWaitingLastWord) this.intervalId = setInterval(this.handleTimerTick, 250);
   }
 
   private handleTimerTick() {
@@ -176,12 +194,12 @@ class GameStore {
     }
     // Derived from the clock, not decremented, so a throttled or coalesced
     // interval can neither run past zero nor drift.
-    const remaining = Math.max(0, Math.ceil((this.deadline - Date.now()) / 1000));
+    const remaining = Math.max(0, Math.ceil((this.deadline - serverNow()) / 1000));
     if (remaining === this.secondsLeft) return;
     this.secondsLeft = remaining;
     if (remaining === 0) {
+      // The deadline stays: it is shared, and every phone reaches zero on its own.
       this.clearTimer();
-      this.deadline = undefined;
       this.isWaitingLastWord = true;
       haptic("heavy");
     }
@@ -295,6 +313,41 @@ class GameStore {
     this.resetRound();
   }
 
+  // --------------------------------------------------------------- rooms
+
+  /** Everything other phones in a room need to mirror this game. */
+  get shared() {
+    return {
+      secondsPerRound: this.secondsPerRound,
+      mode: this.mode,
+      selectedTopics: this.selectedTopics,
+      cards: this.cards,
+      guessed: this.guessed,
+      skipped: this.skipped,
+      history: this.history,
+      deadline: this.deadline ?? null,
+      lastRoundScore: this.lastRoundScore,
+      explainer: this.explainer,
+    };
+  }
+
+  applyShared(state: GameStore["shared"]) {
+    this.secondsPerRound = state.secondsPerRound;
+    this.mode = state.mode;
+    this.selectedTopics = state.selectedTopics;
+    this.cards = state.cards;
+    this.guessed = state.guessed;
+    this.skipped = state.skipped;
+    this.history = state.history;
+    this.lastRoundScore = state.lastRoundScore;
+    this.explainer = state.explainer;
+    const deadline = state.deadline ?? undefined;
+    if (deadline !== this.deadline) {
+      this.deadline = deadline;
+      this.resumeTimer();
+    }
+  }
+
   // ----------------------------------------------------------- internals
 
   private clearTimer() {
@@ -307,6 +360,7 @@ class GameStore {
   private resetRound() {
     this.clearTimer();
     this.deadline = undefined;
+    this.explainer = null;
     this.isWaitingLastWord = false;
     this.secondsLeft = undefined;
     this.skipped = [];
