@@ -6,6 +6,8 @@ import { t } from "./i18n-store";
 
 type Team = { id: string; name: string; score: number };
 
+type GameResult = { kind: "win"; index: number } | { kind: "draw"; indexes: number[] };
+
 export const MIN_TEAMS = 2;
 export const MAX_TEAMS = 6;
 /** 0 means "no target — play until you stop". */
@@ -51,19 +53,25 @@ class TeamsStore {
     return this.currentIndex === this.teams.length - 1;
   }
 
-  /** Winner is only declared once every team has had the same number of turns. */
-  get gameWinner(): Team | null {
+  /**
+   * The game ends once a team reaches the target, but only after every team has had
+   * the same number of turns, so the rest always get a round to catch up. The highest
+   * score wins; a tie at the top is a draw.
+   */
+  get gameResult(): GameResult | null {
     if (!this.targetScore || !this.isLastInCycle) return null;
-    const ranked = [...this.teams].sort((a, b) => b.score - a.score);
-    if (ranked[0].score < this.targetScore) return null;
-    // A tie at the top means nobody has won yet — play another cycle.
-    if (ranked[1] && ranked[1].score === ranked[0].score) return null;
-    return ranked[0];
+    const best = Math.max(...this.teams.map((team) => team.score));
+    if (best < this.targetScore) return null;
+    const leaders = this.teams.flatMap((team, index) => (team.score === best ? [index] : []));
+    return leaders.length === 1
+      ? { kind: "win", index: leaders[0] }
+      : { kind: "draw", indexes: leaders };
   }
 
-  get winnerIndex(): number {
-    const winner = this.gameWinner;
-    return winner ? this.teams.findIndex((team) => team.id === winner.id) : -1;
+  /** Someone has hit the target mid-cycle, so the team now playing is catching up. */
+  get isCatchingUp(): boolean {
+    if (!this.targetScore || this.currentIndex === 0) return false;
+    return this.teams.some((team) => team.score >= this.targetScore);
   }
 
   rename(id: string, name: string) {

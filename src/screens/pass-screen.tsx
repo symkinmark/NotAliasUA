@@ -27,6 +27,9 @@ export function PassScreen() {
         <span className="mt-2 text-3xl font-bold break-words max-w-full">
           {teamsStore.currentLabel}
         </span>
+        {teamsStore.isCatchingUp && (
+          <span className="mt-2 text-sm font-semibold text-error">{t("catchUpNow")}</span>
+        )}
 
         <div className="mt-6 w-full">
           <TeamTiles />

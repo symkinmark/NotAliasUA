@@ -21,6 +21,8 @@ class GameStore {
   guessed: Word[] = [];
   /** Lets the player take back a mis-tap during the round. */
   history: Decision[] = [];
+  /** Struck out on review after the round: counts neither as guessed nor as skipped. */
+  removed: Decision[] = [];
   secondsPerRound = 60;
   secondsLeft?: number;
   isWaitingLastWord = false;
@@ -146,6 +148,28 @@ class GameStore {
     haptic("selection");
     this.skipped.splice(index, 1);
     this.guessed.push(word);
+    this.recommitRound();
+  }
+
+  /** Review: a badly explained word stops counting either way (no point, no skip penalty). */
+  removeWord(word: Word) {
+    const wasGuessed = this.guessed.some((item) => item.text === word.text);
+    const list = wasGuessed ? this.guessed : this.skipped;
+    const index = list.findIndex((item) => item.text === word.text);
+    if (index < 0) return;
+    haptic("selection");
+    const [taken] = list.splice(index, 1);
+    this.removed.push({ word: taken, kind: wasGuessed ? "correct" : "skip" });
+    this.recommitRound();
+  }
+
+  /** Puts a removed word back where it was, in case the wrong one got struck out. */
+  restoreWord(word: Word) {
+    const index = this.removed.findIndex((item) => item.word.text === word.text);
+    if (index < 0) return;
+    haptic("selection");
+    const [{ word: back, kind }] = this.removed.splice(index, 1);
+    (kind === "correct" ? this.guessed : this.skipped).push(back);
     this.recommitRound();
   }
 
@@ -325,6 +349,7 @@ class GameStore {
       guessed: this.guessed,
       skipped: this.skipped,
       history: this.history,
+      removed: this.removed,
       deadline: this.deadline ?? null,
       lastRoundScore: this.lastRoundScore,
       explainer: this.explainer,
@@ -339,6 +364,8 @@ class GameStore {
     this.guessed = state.guessed;
     this.skipped = state.skipped;
     this.history = state.history;
+    // Rooms created before review existed don't carry this field.
+    this.removed = state.removed ?? [];
     this.lastRoundScore = state.lastRoundScore;
     this.explainer = state.explainer;
     const deadline = state.deadline ?? undefined;
@@ -366,6 +393,7 @@ class GameStore {
     this.skipped = [];
     this.guessed = [];
     this.history = [];
+    this.removed = [];
     this.cards = [this.draw(), this.draw()];
   }
 

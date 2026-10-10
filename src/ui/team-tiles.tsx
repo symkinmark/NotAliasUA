@@ -3,8 +3,8 @@ import { cn } from "../lib/cn";
 import { teamsStore, teamLabel } from "../store/teams-store";
 
 type Props = {
-  /** Index to highlight. Defaults to the team whose turn it is. */
-  highlight?: number;
+  /** Indexes to highlight. Defaults to the team whose turn it is. */
+  highlight?: number[];
 };
 
 const columnsFor: Record<number, string> = {
@@ -17,7 +17,7 @@ const columnsFor: Record<number, string> = {
 
 export function TeamTiles(props: Props) {
   const { teams } = teamsStore;
-  const active = props.highlight ?? teamsStore.currentIndex;
+  const active = props.highlight ?? [teamsStore.currentIndex];
 
   return (
     <div className={cn("grid gap-2 w-full", columnsFor[teams.length] ?? "grid-cols-3")}>
@@ -27,8 +27,8 @@ export function TeamTiles(props: Props) {
           layout
           animate={{
             backgroundColor:
-              index === active ? "var(--color-success)" : "rgba(34, 34, 34, 0.05)",
-            color: index === active ? "var(--color-white)" : "var(--color-text)",
+              active.includes(index) ? "var(--color-success)" : "rgba(34, 34, 34, 0.05)",
+            color: active.includes(index) ? "var(--color-white)" : "var(--color-text)",
           }}
           transition={{ duration: 0.2 }}
           className="flex flex-col items-center rounded-[15px] px-2 py-2.5 min-w-0"
