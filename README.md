@@ -57,9 +57,11 @@ pnpm dev
 
 ## Деплой на Vercel
 
-Репозиторій уже налаштований (`vercel.json`, `base: "/"`).
-Імпортуйте репо на [vercel.com/new](https://vercel.com/new) — Vercel визначить
-Vite автоматично. Жодних змінних середовища не потрібно.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fsymkinmark%2FNotAliasUA)
+
+Натисніть кнопку вище — або імпортуйте репозиторій вручну на
+[vercel.com/new](https://vercel.com/new). Vercel сам визначить Vite за
+`vercel.json`. Змінні середовища не потрібні.
 
 ## Технології
 
