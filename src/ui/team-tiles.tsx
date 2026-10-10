@@ -7,13 +7,20 @@ type Props = {
   highlight?: number;
 };
 
+const columnsFor: Record<number, string> = {
+  2: "grid-cols-2",
+  3: "grid-cols-3",
+  4: "grid-cols-2",
+  5: "grid-cols-3",
+  6: "grid-cols-3",
+};
+
 export function TeamTiles(props: Props) {
   const { teams } = teamsStore;
   const active = props.highlight ?? teamsStore.currentIndex;
-  const columns = teams.length === 3 ? "grid-cols-3" : "grid-cols-2";
 
   return (
-    <div className={cn("grid gap-2 w-full", columns)}>
+    <div className={cn("grid gap-2 w-full", columnsFor[teams.length] ?? "grid-cols-3")}>
       {teams.map((team, index) => (
         <motion.div
           key={team.id}

@@ -7,7 +7,7 @@ import { t } from "./i18n-store";
 export type Team = { id: string; name: string; score: number };
 
 export const MIN_TEAMS = 2;
-export const MAX_TEAMS = 4;
+export const MAX_TEAMS = 6;
 /** 0 means "no target — play until you stop". */
 export const TARGET_OPTIONS = [20, 30, 50, 0];
 
@@ -82,6 +82,12 @@ class TeamsStore {
     haptic("light");
     this.teams = this.teams.filter((team) => team.id !== id);
     if (this.currentIndex >= this.teams.length) this.currentIndex = 0;
+  }
+
+  /** Applies a correction to the current team without re-adding the whole round. */
+  adjustScore(delta: number) {
+    if (delta === 0) return;
+    this.current.score = Math.max(0, this.current.score + delta);
   }
 
   addScore(points: number) {

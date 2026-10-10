@@ -6,9 +6,50 @@ import { TeamTiles } from "../ui/team-tiles";
 import { gameStore } from "../store/game-store";
 import { teamsStore, teamLabel } from "../store/teams-store";
 import { t } from "../store/i18n-store";
+import type { Word } from "../lib/word-pool";
+
+function ResultChip(props: { word: Word; correct: boolean }) {
+  const { word, correct } = props;
+  const value = gameStore.pointsFor(word);
+  return (
+    <motion.button
+      layout
+      whileTap={{ scale: 0.93 }}
+      onClick={() =>
+        correct ? gameStore.markSkipped(word) : gameStore.markCorrect(word)
+      }
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors ${
+        correct
+          ? "bg-success/10 hover:bg-success/20"
+          : "bg-error/10 hover:bg-error/20"
+      }`}
+    >
+      <span className={`text-sm ${correct ? "text-success" : "text-error"}`}>
+        {correct ? "✓" : "✗"}
+      </span>
+      <span
+        className={`font-semibold capitalize ${
+          correct ? "text-success" : "text-error"
+        }`}
+      >
+        {word.text}
+      </span>
+      {gameStore.isLevelsActive && (
+        <span
+          className={`text-[11px] font-bold tabular-nums opacity-60 ${
+            correct ? "text-success" : "text-error"
+          }`}
+        >
+          +{value}
+        </span>
+      )}
+    </motion.button>
+  );
+}
 
 export function FinishScreen() {
   const winner = teamsStore.gameWinner;
+  const hasWords = gameStore.guessed.length + gameStore.skipped.length > 0;
 
   return (
     <Modal>
@@ -33,7 +74,7 @@ export function FinishScreen() {
             <span className="text-sm text-text/50 text-center break-words max-w-full">
               {teamsStore.currentLabel}
             </span>
-            <span className="text-5xl font-bold mt-1">
+            <span className="text-5xl font-bold mt-1 tabular-nums">
               {t("roundScore")} {gameStore.lastRoundScore}
             </span>
           </>
@@ -43,39 +84,29 @@ export function FinishScreen() {
           <TeamTiles highlight={winner ? teamsStore.winnerIndex : undefined} />
         </div>
 
-        <div className="w-full mt-6 mb-8 space-y-3">
+        <div className="w-full mt-6 space-y-3">
           {gameStore.guessed.length > 0 && (
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2">
               {gameStore.guessed.map((word) => (
-                <div
-                  key={`guess-${word}`}
-                  className="flex items-center gap-1.5 bg-success/10 px-3 py-1.5 rounded-lg"
-                >
-                  <span className="text-success text-sm">✓</span>
-                  <span className="text-success font-semibold capitalize">
-                    {word}
-                  </span>
-                </div>
+                <ResultChip key={`g-${word.text}`} word={word} correct />
               ))}
             </div>
           )}
-
           {gameStore.skipped.length > 0 && (
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2">
               {gameStore.skipped.map((word) => (
-                <div
-                  key={`skip-${word}`}
-                  className="flex items-center gap-1.5 bg-error/10 px-3 py-1.5 rounded-lg"
-                >
-                  <span className="text-error text-sm">✗</span>
-                  <span className="text-error font-semibold capitalize">
-                    {word}
-                  </span>
-                </div>
+                <ResultChip key={`s-${word.text}`} word={word} correct={false} />
               ))}
             </div>
           )}
         </div>
+
+        {hasWords && (
+          <p className="mt-3 mb-6 text-xs text-text/45 text-center">
+            {t("tapToFix")}
+          </p>
+        )}
+        {!hasWords && <div className="mb-6" />}
 
         <div className="flex flex-col items-center gap-3 w-full">
           {winner ? (
@@ -87,7 +118,6 @@ export function FinishScreen() {
               <span className="font-semibold text-lg">{t("nextTeam")}</span>
             </Button>
           )}
-
           {!winner && (
             <button
               onClick={() => gameStore.exitToStart()}

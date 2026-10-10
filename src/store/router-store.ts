@@ -5,6 +5,7 @@ import { haptic } from "../lib/haptics";
 type Screen =
   | "start-modal"
   | "teams"
+  | "topics"
   | "pass"
   | "game"
   | "finish"
@@ -35,6 +36,11 @@ class RouterStore {
   openTeams() {
     haptic("light");
     this.screen = "teams";
+  }
+
+  openTopics() {
+    haptic("light");
+    this.screen = "topics";
   }
 }
 

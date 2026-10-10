@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { Undo2 } from "lucide-react";
 import { Counter } from "../ui/counter";
 import { Countdown } from "../ui/countdown";
 import { CardDeck } from "../ui/card-deck";
@@ -28,8 +29,21 @@ export function GameScreen() {
         <CardDeck />
       </div>
 
-      <div className="flex justify-center gap-12 mt-8">
+      <div className="flex items-center justify-center gap-8 mt-8 w-[290px]">
         <Counter variant="error" value={gameStore.skipped.length} />
+
+        {/* Takes back a mis-tap and puts the word back on top of the deck. */}
+        <motion.button
+          onClick={() => gameStore.undo()}
+          disabled={!gameStore.canUndo}
+          whileTap={{ scale: 0.9 }}
+          aria-label={t("undo")}
+          className="flex flex-col items-center gap-0.5 text-text/45 enabled:hover:text-text transition-colors disabled:opacity-25 py-1 px-2"
+        >
+          <Undo2 size={20} />
+          <span className="text-[10px] font-medium leading-none">{t("undo")}</span>
+        </motion.button>
+
         <Counter variant="success" value={gameStore.guessed.length} />
       </div>
     </div>
