@@ -1,7 +1,7 @@
 {
-  "name": "Аліас — українські слова",
-  "short_name": "Аліас",
-  "description": "Гра Аліас з великим словником українських слів",
+  "name": "Notalias — українські слова",
+  "short_name": "Notalias",
+  "description": "Гра в пояснення слів з великим словником українських слів",
   "lang": "uk",
   "start_url": "/",
   "display": "standalone",

@@ -9,7 +9,7 @@ export const languageNames: Record<Language, string> = {
 
 const translations = {
   uk: {
-    appTitle: "Аліас",
+    appTitle: "Notalias",
     secondsPerRound: "Секунд на раунд",
     start: "Старт!",
     skip: "Пропустити",
@@ -77,7 +77,7 @@ const translations = {
     takeOver: "Пояснювати з цього телефона",
   },
   en: {
-    appTitle: "Alias game",
+    appTitle: "Notalias",
     secondsPerRound: "Seconds per round",
     start: "Start!",
     skip: "Skip",
@@ -145,7 +145,7 @@ const translations = {
     takeOver: "Explain from this phone",
   },
   ru: {
-    appTitle: "Алиас",
+    appTitle: "Notalias",
     secondsPerRound: "Секунд на раунд",
     start: "Старт!",
     skip: "Пропуск",
