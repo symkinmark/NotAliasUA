@@ -15,7 +15,11 @@ export type Word = {
 
 type RawWord = [string, TopicId, Difficulty];
 
-/** Ukrainian is the tagged list; en/ru are plain and get neutral tags. */
+/**
+ * Ukrainian is the tagged list; en/ru are plain and get neutral tags.
+ * A word may be listed under several topics (вулик is nature and beekeeping),
+ * so this has one entry per topic membership.
+ */
 const ukrainian: Word[] = (rawUkrainian as RawWord[]).map(([text, topic, difficulty]) => ({
   text,
   topic,
@@ -23,11 +27,24 @@ const ukrainian: Word[] = (rawUkrainian as RawWord[]).map(([text, topic, difficu
 }));
 
 function untagged(words: string[]): Word[] {
+/** Keeps the first listing of each word, so the deck never shows it twice. */
+function uniqueByText(words: Word[]): Word[] {
+  const seen = new Set<string>();
+  return words.filter((word) => {
+    const key = word.text.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+const ukrainianDeck = uniqueByText(ukrainian);
+
   return words.map((text) => ({ text, topic: "abstract" as TopicId, difficulty: 2 as Difficulty }));
 }
 
 const byLanguage: Record<Language, Word[]> = {
-  uk: ukrainian,
+  uk: ukrainianDeck,
   en: untagged(englishWords),
   ru: untagged(russianWords),
 };
@@ -44,12 +61,13 @@ export function countsByTopic(): Record<TopicId, number> {
 }
 
 export function countFor(topics: TopicId[]): number {
-  if (topics.length === 0) return ukrainian.length;
+  if (topics.length === 0) return ukrainianDeck.length;
   const wanted = new Set(topics);
-  return ukrainian.filter((word) => wanted.has(word.topic)).length;
+  return uniqueByText(ukrainian.filter((word) => wanted.has(word.topic))).length;
 }
 
 function hashString(text: string): number {
+/** Distinct words in a topic selection; a word shared by two chosen topics counts once. */
   let hash = 2166136261;
   for (let i = 0; i < text.length; i++) {
     hash ^= text.charCodeAt(i);
@@ -108,7 +126,7 @@ class WordPool {
     const all = byLanguage[language];
     if (!isTagged(language) || topics.length === 0) return all;
     const wanted = new Set(topics);
-    const picked = all.filter((word) => wanted.has(word.topic));
+    const picked = uniqueByText(ukrainian.filter((word) => wanted.has(word.topic)));
     return picked.length > 0 ? picked : all;
   }
 
