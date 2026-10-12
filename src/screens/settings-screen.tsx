@@ -11,6 +11,13 @@ import { languages, languageNames } from "../i18n/translations";
 export function SettingsScreen() {
   const [isConfirming, setIsConfirming] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const versionTaps = useRef(0);
+
+  // Hidden door: five taps on the version line open God mode.
+  function handleVersionTap() {
+    versionTaps.current += 1;
+    if (versionTaps.current >= 5) routerStore.navigate("god");
+  }
 
   useEffect(() => {
     return () => {
@@ -33,9 +40,9 @@ export function SettingsScreen() {
   return (
     <Modal
       footer={
-        <p className="mt-2 text-xs text-yellow-800/50">
+        <button onClick={handleVersionTap} className="mt-2 text-xs text-yellow-800/50 select-none">
           {t("appVersion")}: {__COMMIT_HASH__}
-        </p>
+        </button>
       }
     >
       <div className="flex flex-col items-center">

@@ -54,3 +54,21 @@ export const roomApi = {
       : { kind: "ok" as const, v: data.v };
   },
 };
+
+/** Tells the server a player flagged this word as non-existent or pointless. Best effort. */
+export function reportWord(word: string) {
+  void fetch("/api/room?flags", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ word }),
+  }).catch(() => {
+    // Offline: the word is still hidden on this phone; the report is just lost.
+  });
+}
+
+/** Every flagged word with how many times it was flagged, for God mode. */
+export async function fetchFlags(): Promise<Record<string, number>> {
+  const response = await fetch("/api/room?flags", { cache: "no-store" });
+  if (!response.ok) throw new RoomError("network");
+  return ((await response.json()) as { flags: Record<string, number> }).flags;
+}

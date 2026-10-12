@@ -10,7 +10,8 @@ type Screen =
   | "game"
   | "finish"
   | "settings"
-  | "room";
+  | "room"
+  | "god";
 
 class RouterStore {
   screen: Screen = "start-modal";

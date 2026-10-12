@@ -1,4 +1,5 @@
 import { makeAutoObservable } from "mobx";
+import { makePersistable } from "mobx-persist-store";
 import rawUkrainian from "./uk-words.json";
 import englishWords from "./top-2000-english-words.json";
 import russianWords from "./top-2000-russian-words.json";
@@ -26,7 +27,6 @@ const ukrainian: Word[] = (rawUkrainian as RawWord[]).map(([text, topic, difficu
   difficulty,
 }));
 
-function untagged(words: string[]): Word[] {
 /** Keeps the first listing of each word, so the deck never shows it twice. */
 function uniqueByText(words: Word[]): Word[] {
   const seen = new Set<string>();
@@ -40,6 +40,7 @@ function uniqueByText(words: Word[]): Word[] {
 
 const ukrainianDeck = uniqueByText(ukrainian);
 
+function untagged(words: string[]): Word[] {
   return words.map((text) => ({ text, topic: "abstract" as TopicId, difficulty: 2 as Difficulty }));
 }
 
@@ -54,12 +55,19 @@ export function isTagged(language: Language) {
   return language === "uk";
 }
 
+/** Every topic a Ukrainian word is listed under. */
+export function topicsOf(text: string): TopicId[] {
+  const key = text.toLowerCase();
+  return ukrainian.filter((word) => word.text.toLowerCase() === key).map((word) => word.topic);
+}
+
 export function countsByTopic(): Record<TopicId, number> {
   const counts = Object.fromEntries(topicIds.map((id) => [id, 0])) as Record<TopicId, number>;
   for (const word of ukrainian) counts[word.topic] += 1;
   return counts;
 }
 
+/** Distinct words in a topic selection; a word shared by two chosen topics counts once. */
 export function countFor(topics: TopicId[]): number {
   if (topics.length === 0) return ukrainianDeck.length;
   const wanted = new Set(topics);
@@ -67,7 +75,6 @@ export function countFor(topics: TopicId[]): number {
 }
 
 function hashString(text: string): number {
-/** Distinct words in a topic selection; a word shared by two chosen topics counts once. */
   let hash = 2166136261;
   for (let i = 0; i < text.length; i++) {
     hash ^= text.charCodeAt(i);
@@ -116,10 +123,17 @@ class WordPool {
   seed = randomSeed();
   cursor = 0;
   signature = "";
+  /** Words flagged on this phone as non-existent or pointless; never drawn here again. */
+  hidden: string[] = [];
   private cache = { key: "", order: [] as Word[] };
 
   constructor() {
     makeAutoObservable<WordPool, "cache">(this, { cache: false }, { autoBind: true });
+    makePersistable(this, {
+      name: "WordPool",
+      properties: ["hidden"],
+      storage: window.localStorage,
+    });
   }
 
   private sourceFor(language: Language, topics: TopicId[]): Word[] {
@@ -152,13 +166,39 @@ class WordPool {
     this.cursor = 0;
   }
 
+  private wordAt(source: Word[], cursor: number): Word {
+    const lap = Math.floor(cursor / source.length);
+    return this.orderFor(source, lap)[cursor % source.length];
+  }
+
   draw(language: Language, topics: TopicId[]): Word {
     this.configure(language, topics);
     const source = this.sourceFor(language, topics);
-    const lap = Math.floor(this.cursor / source.length);
-    const word = this.orderFor(source, lap)[this.cursor % source.length];
+    // Hidden words are stepped over rather than removed from the order, so the
+    // shared seed and cursor still line up with other phones, and undo (one
+    // step back) lands on the same word again.
+    const hidden = new Set(this.hidden);
+    for (let tries = 0; tries < source.length; tries++) {
+      const word = this.wordAt(source, this.cursor);
+      this.cursor += 1;
+      if (!hidden.has(word.text.toLowerCase())) return word;
+    }
+    const word = this.wordAt(source, this.cursor);
     this.cursor += 1;
     return word;
+  }
+
+  /** True when the word wasn't hidden yet. */
+  hide(text: string): boolean {
+    const key = text.toLowerCase();
+    if (this.hidden.includes(key)) return false;
+    this.hidden.push(key);
+    return true;
+  }
+
+  unhide(text: string) {
+    const key = text.toLowerCase();
+    this.hidden = this.hidden.filter((item) => item !== key);
   }
 
   /** Un-draws the most recent card so it comes up next again. */

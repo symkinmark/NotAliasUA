@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Handshake, ListChecks, Trophy, Undo2, X } from "lucide-react";
+import { Flag, Handshake, ListChecks, Trophy, Undo2, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "../ui/button";
 import { Modal } from "../ui/modal";
@@ -57,9 +57,9 @@ const statusTone: Record<Status, string> = {
   removed: "text-text/35",
 };
 
-/** One line of the review list: strike a badly explained word out, or put it back. */
-function ReviewRow(props: { word: Word; status: Status }) {
-  const { word, status } = props;
+/** One line of the review list: strike a word out, flag it as bad, or put it back. */
+function ReviewRow(props: { word: Word; status: Status; flagged?: boolean }) {
+  const { word, status, flagged } = props;
   const isRemoved = status === "removed";
   return (
     <motion.div layout className="flex items-center gap-2 h-11 pl-3 pr-1 rounded-lg bg-text/5">
@@ -76,7 +76,10 @@ function ReviewRow(props: { word: Word; status: Status }) {
         {word.text}
       </span>
       {isRemoved ? (
-        <span className="text-[11px] text-text/40">{t("notCounted")}</span>
+        <span className="flex items-center gap-1 text-[11px] text-text/40">
+          {flagged && <Flag size={11} className="text-error" />}
+          {flagged ? t("flagged") : t("notCounted")}
+        </span>
       ) : (
         status === "correct" &&
         gameStore.isLevelsActive && (
@@ -84,6 +87,17 @@ function ReviewRow(props: { word: Word; status: Status }) {
             +{gameStore.pointsFor(word)}
           </span>
         )
+      )}
+      {!isRemoved && (
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={() => gameStore.flagWord(word)}
+          aria-label={t("flagWord")}
+          title={t("flagWord")}
+          className="p-2 rounded-lg text-text/45 hover:text-error hover:bg-error/5 transition-colors"
+        >
+          <Flag size={16} />
+        </motion.button>
       )}
       <motion.button
         whileTap={{ scale: 0.9 }}
@@ -156,8 +170,8 @@ export function FinishScreen() {
               {skipped.map((word) => (
                 <ReviewRow key={`s-${word.text}`} word={word} status="skip" />
               ))}
-              {removed.map(({ word }) => (
-                <ReviewRow key={`r-${word.text}`} word={word} status="removed" />
+              {removed.map(({ word, flagged }) => (
+                <ReviewRow key={`r-${word.text}`} word={word} status="removed" flagged={flagged} />
               ))}
             </div>
           </div>
@@ -179,12 +193,13 @@ export function FinishScreen() {
             )}
             {removed.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {removed.map(({ word }) => (
+                {removed.map(({ word, flagged }) => (
                   <span
                     key={`r-${word.text}`}
-                    className="px-3 py-1.5 rounded-lg bg-text/5 font-semibold capitalize text-text/35 line-through"
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-text/5 font-semibold capitalize text-text/35"
                   >
-                    {word.text}
+                    {flagged && <Flag size={12} className="text-error/70" />}
+                    <span className="line-through">{word.text}</span>
                   </span>
                 ))}
               </div>

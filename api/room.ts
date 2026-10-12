@@ -4,6 +4,8 @@
  *   POST /api/room                  { state }        → 201 { code, v, now }
  *   GET  /api/room?code=1234&v=7                     → 200 { v, now, state? }  (no state when v is current)
  *   PUT  /api/room?code=1234        { base, state }  → 200 { v, now } | 409 { v, now, state }
+ *   POST /api/room?flags            { word }         → 200  (a player flagged a word as bad)
+ *   GET  /api/room?flags                             → 200 { flags: { word: count } }
  *
  * Each room is one Redis hash: `v` (version) and `s` (the game state as JSON).
  * A write only lands if `base` is still the current version (compare-and-set),
@@ -27,6 +29,9 @@ interface RoomStorage {
   /** False when the code is already taken. */
   create(code: string, state: string): Promise<boolean>;
   write(code: string, base: number, state: string): Promise<WriteResult>;
+  /** Counts one more report that a word doesn't exist or is pointless. */
+  flag(word: string): Promise<void>;
+  flags(): Promise<Record<string, number>>;
 }
 
 class NotConfiguredError extends Error {}
@@ -70,6 +75,7 @@ function upstashStorage(): RoomStorage {
   }
 
   const key = (code: string) => `alias:room:${code}`;
+  const flagsKey = "alias:flags";
 
   return {
     async read(code) {
@@ -87,13 +93,30 @@ function upstashStorage(): RoomStorage {
       if (kind === 0) return { kind: "conflict", v: v!, state: current! };
       return { kind: "missing" };
     },
+    async flag(word) {
+      await run(["HINCRBY", flagsKey, word, 1]);
+    },
+    async flags() {
+      // HGETALL comes back flat: [field, value, field, value, ...]
+      const flat = ((await run(["HGETALL", flagsKey])) ?? []) as string[];
+      const counts: Record<string, number> = {};
+      for (let i = 0; i < flat.length; i += 2) counts[flat[i]] = Number(flat[i + 1]);
+      return counts;
+    },
   };
 }
 
 /** Same contract kept in memory, for `vite dev` where there is no Redis. */
 export function memoryStorage(): RoomStorage {
   const rooms = new Map<string, Stored>();
+  const flagged = new Map<string, number>();
   return {
+    async flag(word) {
+      flagged.set(word, (flagged.get(word) ?? 0) + 1);
+    },
+    async flags() {
+      return Object.fromEntries(flagged);
+    },
     async read(code) {
       return rooms.get(code) ?? null;
     },
@@ -140,8 +163,20 @@ async function readState(request: Request): Promise<{ base: number; state: strin
   }
 }
 
+async function handleFlags(request: Request, storage: RoomStorage): Promise<Response> {
+  if (request.method === "GET") return reply(200, { flags: await storage.flags() });
+  if (request.method !== "POST") return reply(405, { error: "method-not-allowed" });
+  const body = (await request.json().catch(() => null)) as { word?: unknown } | null;
+  const word = typeof body?.word === "string" ? body.word.trim().toLowerCase() : "";
+  if (!word || word.length > 60) return reply(400, { error: "bad-word" });
+  await storage.flag(word);
+  return reply(200, { ok: true });
+}
+
 export async function handleRoom(request: Request, storage: RoomStorage): Promise<Response> {
   try {
+    if (new URL(request.url).searchParams.has("flags")) return await handleFlags(request, storage);
+
     if (request.method === "POST") {
       const body = await readState(request);
       if (!body) return reply(400, { error: "bad-state" });

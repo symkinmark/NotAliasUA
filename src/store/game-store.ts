@@ -10,10 +10,12 @@ import { haptic } from "../lib/haptics";
 import { routerStore } from "./router-store";
 import { serverNow } from "../lib/clock";
 import { deviceId } from "../lib/device-id";
+import { reportWord } from "../lib/room-api";
 
 export type GameMode = "classic" | "levels";
 
-type Decision = { word: Word; kind: "correct" | "skip" };
+/** `flagged`: struck out on review as a word that doesn't exist or is pointless. */
+type Decision = { word: Word; kind: "correct" | "skip"; flagged?: boolean };
 
 class GameStore {
   cards: Word[] = [];
@@ -163,12 +165,31 @@ class GameStore {
     this.recommitRound();
   }
 
+  /**
+   * Review: the word doesn't exist or is pointless. It stops counting, this phone
+   * never draws it again, and the server tallies the report for God mode.
+   */
+  flagWord(word: Word) {
+    const struck = this.removed.find((item) => item.word.text === word.text);
+    if (struck) {
+      struck.flagged = true;
+    } else {
+      this.removeWord(word);
+      const added = this.removed.find((item) => item.word.text === word.text);
+      if (!added) return;
+      added.flagged = true;
+    }
+    haptic("warning");
+    if (wordPool.hide(word.text)) reportWord(word.text);
+  }
+
   /** Puts a removed word back where it was, in case the wrong one got struck out. */
   restoreWord(word: Word) {
     const index = this.removed.findIndex((item) => item.word.text === word.text);
     if (index < 0) return;
     haptic("selection");
-    const [{ word: back, kind }] = this.removed.splice(index, 1);
+    const [{ word: back, kind, flagged }] = this.removed.splice(index, 1);
+    if (flagged) wordPool.unhide(back.text);
     (kind === "correct" ? this.guessed : this.skipped).push(back);
     this.recommitRound();
   }

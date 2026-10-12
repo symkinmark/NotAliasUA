@@ -8,6 +8,7 @@ import { PassScreen } from "./screens/pass-screen";
 import { TeamsScreen } from "./screens/teams-screen";
 import { TopicsScreen } from "./screens/topics-screen";
 import { RoomScreen } from "./screens/room-screen";
+import { GodScreen } from "./screens/god-screen";
 import { RoomBadge } from "./ui/room-status";
 import { routerStore } from "./store/router-store";
 
@@ -46,6 +47,7 @@ export function Page() {
           {routerStore.screen === "teams" && <TeamsScreen />}
           {routerStore.screen === "topics" && <TopicsScreen />}
           {routerStore.screen === "room" && <RoomScreen />}
+          {routerStore.screen === "god" && <GodScreen />}
           {routerStore.screen === "pass" && <PassScreen />}
           {routerStore.screen === "finish" && <FinishScreen />}
           {routerStore.screen === "game" && <GameScreen />}
